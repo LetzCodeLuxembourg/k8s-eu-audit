@@ -165,19 +165,21 @@ func TestDORA_RM1_GovernanceAndStrategy(t *testing.T) {
 			},
 		},
 		{
+			// dora-rm-1 has 15 mapped checks.
+			// 8 pass + 4 fail = 12 data points → 8/12 = 67% → WARN
 			name:       "partial_k8s_good_host_bad",
 			controlID:  "dora-rm-1",
 			wantStatus: "WARN",
 			findings: []model.Finding{
-				// K8s good
+				// K8s good (6 pass)
 				pass("C-0013", "kubescape"), pass("C-0017", "kubescape"),
 				pass("C-0057", "kubescape"), pass("C-0016", "kubescape"),
-				pass("C-0088", "kubescape"),
-				// Host bad — firewall off
+				pass("C-0088", "kubescape"), pass("C-0004", "kubescape"),
+				// Linux kernel ok (2 pass)
+				pass("LYNIS-KERN-001", "lynis"), pass("LYNIS-KERN-002", "lynis"),
+				// Host firewalls bad (4 fail)
 				fail("LYNIS-FW-001", "lynis"), fail("LYNIS-FW-002", "lynis"),
-				fail("WIN-UAC-001", "windows"), fail("WIN-FW-001", "windows"),
-				fail("WIN-FW-002", "windows"), fail("WIN-FW-003", "windows"),
-				fail("MACOS-FW-001", "macos"),
+				fail("WIN-FW-001", "windows"), fail("WIN-FW-002", "windows"),
 			},
 		},
 	})
@@ -211,19 +213,23 @@ func TestDORA_RM2_AssetProtection(t *testing.T) {
 			},
 		},
 		{
+			// dora-rm-2 has 10 mapped checks.
+			// 6 pass + 4 fail = 10 data → 6/10 = 60% → WARN
 			name:       "violation_no_disk_encryption",
 			controlID:  "dora-rm-2",
 			wantStatus: "WARN",
 			findings: []model.Finding{
-				// K8s ok
+				// K8s ok (4 pass)
 				pass("C-0030", "kubescape"), pass("C-0031", "kubescape"),
 				pass("C-0066", "kubescape"), pass("C-0079", "kubescape"),
-				pass("C-0036", "kubescape"),
-				// No disk encryption on hosts
+				// No disk encryption on any host (3 fail)
 				fail("MACOS-FV-001", "macos"),
 				fail("WIN-BL-001", "windows"),
-				pass("LYNIS-ENC-001", "lynis"),
-				pass("LYNIS-INT-001", "lynis"),
+				fail("LYNIS-ENC-001", "lynis"),
+				// File integrity also missing (1 fail)
+				fail("LYNIS-INT-001", "lynis"),
+				// SMB ok (2 pass)
+				pass("C-0036", "kubescape"),
 				pass("WIN-SMB-001", "windows"),
 			},
 		},
@@ -239,14 +245,14 @@ func TestDORA_RM3_AnomalyDetection(t *testing.T) {
 			controlID:  "dora-rm-3",
 			wantStatus: "PASS",
 			findings: []model.Finding{
-				pass("C-0067", "kubescape"),         // K8s audit
-				pass("LYNIS-LOG-001", "lynis"),       // syslog
-				pass("LYNIS-LOG-002", "lynis"),       // auditd
-				pass("LYNIS-LOG-003", "lynis"),       // log rotation
-				pass("MACOS-LOG-001", "macos"),       // OpenBSM
-				pass("WIN-AUD-001", "windows"),       // logon audit
-				pass("WIN-AUD-002", "windows"),       // priv audit
-				pass("WIN-AUD-003", "windows"),       // log size
+				pass("C-0067", "kubescape"),    // K8s audit
+				pass("LYNIS-LOG-001", "lynis"), // syslog
+				pass("LYNIS-LOG-002", "lynis"), // auditd
+				pass("LYNIS-LOG-003", "lynis"), // log rotation
+				pass("MACOS-LOG-001", "macos"), // OpenBSM
+				pass("WIN-AUD-001", "windows"), // logon audit
+				pass("WIN-AUD-002", "windows"), // priv audit
+				pass("WIN-AUD-003", "windows"), // log size
 			},
 		},
 		{
@@ -265,18 +271,19 @@ func TestDORA_RM3_AnomalyDetection(t *testing.T) {
 			},
 		},
 		{
+			// dora-rm-3 has 8 mapped checks.
+			// 2 pass + 6 fail = 8 data → 2/8 = 25% → FAIL
 			name:       "violation_no_k8s_audit_no_auditd",
 			controlID:  "dora-rm-3",
 			wantStatus: "FAIL",
-			// DORA Art.10 requires CONTINUOUS monitoring — missing auditd+k8s audit = FAIL
 			findings: []model.Finding{
 				fail("C-0067", "kubescape"),    // no K8s audit
 				pass("LYNIS-LOG-001", "lynis"), // syslog ok
 				fail("LYNIS-LOG-002", "lynis"), // no auditd
-				pass("LYNIS-LOG-003", "lynis"),
+				fail("LYNIS-LOG-003", "lynis"), // no log rotation
 				fail("MACOS-LOG-001", "macos"), // no macOS audit
 				fail("WIN-AUD-001", "windows"), // no logon audit
-				pass("WIN-AUD-002", "windows"),
+				fail("WIN-AUD-002", "windows"), // no priv audit
 				pass("WIN-AUD-003", "windows"),
 			},
 		},
@@ -287,8 +294,8 @@ func TestDORA_RM4_BusinessContinuity(t *testing.T) {
 	// dora-rm-4: RTO/RPO — K8s only checks
 	runDORAScenarios(t, []doraScenario{
 		{
-			name:      "compliant_ha_with_pdb",
-			controlID: "dora-rm-4",
+			name:       "compliant_ha_with_pdb",
+			controlID:  "dora-rm-4",
 			wantStatus: "PASS",
 			findings: []model.Finding{
 				pass("C-0068", "kubescape"), // multi-replica
@@ -296,8 +303,8 @@ func TestDORA_RM4_BusinessContinuity(t *testing.T) {
 			},
 		},
 		{
-			name:      "violation_single_replica_no_pdb",
-			controlID: "dora-rm-4",
+			name:       "violation_single_replica_no_pdb",
+			controlID:  "dora-rm-4",
 			wantStatus: "FAIL",
 			findings: []model.Finding{
 				fail("C-0068", "kubescape"), // single replica
@@ -411,10 +418,10 @@ func TestDORA_TPP1_ThirdPartyRisk(t *testing.T) {
 			controlID:  "dora-tpp-1",
 			wantStatus: "FAIL",
 			findings: []model.Finding{
-				fail("C-0078", "kubescape"), // untrusted registries
-				fail("C-0079", "kubescape"), // :latest tags
-				fail("C-0036", "kubescape"), // sudo in entrypoint
-				fail("C-0270", "kubescape"), // IfNotPresent
+				fail("C-0078", "kubescape"),   // untrusted registries
+				fail("C-0079", "kubescape"),   // :latest tags
+				fail("C-0036", "kubescape"),   // sudo in entrypoint
+				fail("C-0270", "kubescape"),   // IfNotPresent
 				fail("MACOS-GK-001", "macos"), // Gatekeeper off
 				fail("WIN-AV-001", "windows"), // Defender off
 			},
@@ -424,10 +431,10 @@ func TestDORA_TPP1_ThirdPartyRisk(t *testing.T) {
 			controlID:  "dora-tpp-1",
 			wantStatus: "WARN",
 			findings: []model.Finding{
-				pass("C-0078", "kubescape"),    // trusted registry ✓
-				fail("C-0079", "kubescape"),    // :latest tag ✗
+				pass("C-0078", "kubescape"), // trusted registry ✓
+				fail("C-0079", "kubescape"), // :latest tag ✗
 				pass("C-0036", "kubescape"),
-				fail("C-0270", "kubescape"),    // IfNotPresent ✗
+				fail("C-0270", "kubescape"), // IfNotPresent ✗
 				pass("MACOS-GK-001", "macos"),
 				pass("WIN-AV-001", "windows"),
 			},
@@ -464,48 +471,58 @@ func TestDORA_AUTH1_StrongAuthentication(t *testing.T) {
 			},
 		},
 		{
+			// dora-auth-1 has 18 mapped checks.
+			// 4 pass + 12 fail = 16 data → 4/16 = 25% → FAIL
 			name:       "violation_no_mfa_on_any_system",
 			controlID:  "dora-auth-1",
 			wantStatus: "FAIL",
 			findings: []model.Finding{
-				fail("C-0005", "kubescape"),    // insecure port
-				fail("C-0088", "kubescape"),    // no RBAC
-				fail("C-0262", "kubescape"),    // anonymous auth
-				fail("LYNIS-SSH-001", "lynis"), // root SSH allowed
-				fail("LYNIS-AUTH-003", "lynis"),// no MFA
-				fail("MACOS-SCR-001", "macos"), // no screen lock
-				fail("WIN-RDP-002", "windows"), // RDP without NLA
-				fail("WIN-SCR-001", "windows"), // no screen lock
-				// Some passing to avoid all-FAIL
-				pass("C-0035", "kubescape"),
-				pass("LYNIS-SSH-002", "lynis"),
-				pass("LYNIS-AUTH-001", "lynis"),
-				pass("LYNIS-AUTH-002", "lynis"),
+				// K8s: all bad (4 fail)
+				fail("C-0005", "kubescape"),
+				fail("C-0088", "kubescape"),
+				fail("C-0262", "kubescape"),
+				fail("C-0035", "kubescape"),
+				// Linux: SSH insecure, no password policy, no MFA (6 fail)
+				fail("LYNIS-SSH-001", "lynis"),
+				fail("LYNIS-SSH-002", "lynis"),
+				fail("LYNIS-SSH-003", "lynis"),
+				fail("LYNIS-AUTH-001", "lynis"),
+				fail("LYNIS-AUTH-002", "lynis"),
+				fail("LYNIS-AUTH-003", "lynis"),
+				// macOS: no screen lock (1 fail, 1 pass)
+				fail("MACOS-SCR-001", "macos"),
 				pass("MACOS-SSH-001", "macos"),
+				// Windows: RDP without NLA, no screen lock, password ok (2 fail, 2 pass)
+				fail("WIN-RDP-002", "windows"),
+				fail("WIN-SCR-001", "windows"),
 				pass("WIN-PWD-001", "windows"),
 				pass("WIN-PWD-002", "windows"),
-				pass("WIN-RDP-001", "windows"),
 			},
 		},
 		{
+			// dora-auth-1 has 18 mapped checks.
+			// 14 pass + 4 fail = 18 data → 14/18 = 77.8% → WARN (just below 80%)
 			name:       "violation_no_mfa_pam_module",
 			controlID:  "dora-auth-1",
 			wantStatus: "WARN",
 			findings: []model.Finding{
-				// K8s good
+				// K8s good (4 pass)
 				pass("C-0005", "kubescape"), pass("C-0088", "kubescape"),
 				pass("C-0262", "kubescape"), pass("C-0035", "kubescape"),
-				// SSH hardened but no MFA PAM
+				// SSH hardened but no MFA PAM (5 pass, 1 fail)
 				pass("LYNIS-SSH-001", "lynis"), pass("LYNIS-SSH-002", "lynis"),
 				pass("LYNIS-SSH-003", "lynis"), pass("LYNIS-AUTH-001", "lynis"),
 				pass("LYNIS-AUTH-002", "lynis"),
-				fail("LYNIS-AUTH-003", "lynis"), // no MFA module — critical gap
-				// macOS ok
-				pass("MACOS-SCR-001", "macos"), pass("MACOS-SSH-001", "macos"),
-				// Windows ok
-				pass("WIN-RDP-001", "windows"), pass("WIN-RDP-002", "windows"),
-				pass("WIN-PWD-001", "windows"), pass("WIN-PWD-002", "windows"),
-				pass("WIN-SCR-001", "windows"),
+				fail("LYNIS-AUTH-003", "lynis"), // no MFA PAM — critical gap
+				// macOS: screen lock not immediate (1 fail, 1 pass)
+				fail("MACOS-SCR-001", "macos"),
+				pass("MACOS-SSH-001", "macos"),
+				// Windows: RDP without NLA (1 fail, 3 pass)
+				fail("WIN-RDP-002", "windows"),
+				fail("WIN-SCR-001", "windows"),
+				pass("WIN-RDP-001", "windows"),
+				pass("WIN-PWD-001", "windows"),
+				pass("WIN-PWD-002", "windows"),
 			},
 		},
 	})
@@ -544,14 +561,14 @@ func TestDORA_FullPipeline_LuxembourgFinancialEntity(t *testing.T) {
 		// === Linux servers: partial compliance ===
 		pass("LYNIS-FW-001", "lynis"), pass("LYNIS-FW-002", "lynis"),
 		pass("LYNIS-LOG-001", "lynis"),
-		fail("LYNIS-LOG-002", "lynis"),  // auditd not running — gap
+		fail("LYNIS-LOG-002", "lynis"), // auditd not running — gap
 		pass("LYNIS-LOG-003", "lynis"),
 		pass("LYNIS-ENC-001", "lynis"),
 		pass("LYNIS-UPD-001", "lynis"),
-		fail("LYNIS-UPD-002", "lynis"),  // some vulnerable packages
+		fail("LYNIS-UPD-002", "lynis"), // some vulnerable packages
 		pass("LYNIS-INT-001", "lynis"),
 		pass("LYNIS-SSH-001", "lynis"), pass("LYNIS-SSH-002", "lynis"),
-		fail("LYNIS-SSH-003", "lynis"),  // password SSH still enabled — gap
+		fail("LYNIS-SSH-003", "lynis"), // password SSH still enabled — gap
 		pass("LYNIS-AUTH-001", "lynis"), pass("LYNIS-AUTH-002", "lynis"),
 		fail("LYNIS-AUTH-003", "lynis"), // no MFA PAM — critical gap for DORA
 		pass("LYNIS-KERN-001", "lynis"), pass("LYNIS-KERN-002", "lynis"),
@@ -566,16 +583,17 @@ func TestDORA_FullPipeline_LuxembourgFinancialEntity(t *testing.T) {
 		pass("WIN-AUD-001", "windows"), pass("WIN-AUD-002", "windows"),
 		pass("WIN-AUD-003", "windows"),
 		pass("WIN-PWD-001", "windows"), pass("WIN-PWD-002", "windows"),
-		pass("WIN-RDP-001", "windows"), pass("WIN-RDP-002", "windows"),
+		pass("WIN-RDP-001", "windows"), fail("WIN-RDP-002", "windows"), // NLA not enforced — gap
 		pass("WIN-UAC-001", "windows"),
-		pass("WIN-SCR-001", "windows"), pass("WIN-SMB-001", "windows"),
+		fail("WIN-SCR-001", "windows"), // screen lock timeout too long — gap
+		pass("WIN-SMB-001", "windows"),
 
 		// === macOS (BYOD / management laptops): partial ===
 		pass("MACOS-FV-001", "macos"),
 		pass("MACOS-FW-001", "macos"), pass("MACOS-FW-002", "macos"),
 		pass("MACOS-SIP-001", "macos"), pass("MACOS-GK-001", "macos"),
 		pass("MACOS-UPD-001", "macos"),
-		fail("MACOS-SCR-001", "macos"),  // screen lock not immediate — gap
+		fail("MACOS-SCR-001", "macos"), // screen lock not immediate — gap
 		pass("MACOS-SSH-001", "macos"),
 		pass("MACOS-LOG-001", "macos"),
 		pass("MACOS-SHR-001", "macos"), pass("MACOS-SHR-002", "macos"),

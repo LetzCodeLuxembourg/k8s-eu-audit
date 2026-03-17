@@ -281,40 +281,57 @@ func buildLynisFindings(p map[string][]string) []model.Finding {
 	// -------------------------------------------------------------------------
 	// Kernel hardening — maps to art21-2-a (risk analysis / IS security policies)
 	// -------------------------------------------------------------------------
-	kernelChecks := map[string]struct {
-		id, name, rem string
-		sev           model.Severity
+	// kernelChecks defines sysctl-based kernel hardening checks.
+	// passValue is the sysctl value that means the control is satisfied.
+	// For most controls "1" means enabled=secure, but for accept_redirects
+	// "0" means disabled=secure (inverted logic).
+	kernelChecks := []struct {
+		sysctlKey, id, name, rem, passValue string
+		sev                                 model.Severity
 	}{
-		"kernel.randomize_va_space": {
-			id:   "LYNIS-KERN-001",
-			name: "ASLR enabled (randomize_va_space=2)",
-			rem:  "Set 'kernel.randomize_va_space = 2' in /etc/sysctl.conf and run 'sysctl -p'.",
-			sev:  model.SeverityHigh,
+		{
+			sysctlKey: "kernel.randomize_va_space",
+			id:        "LYNIS-KERN-001",
+			name:      "ASLR enabled (randomize_va_space=2)",
+			rem:       "Set 'kernel.randomize_va_space = 2' in /etc/sysctl.conf and run 'sysctl -p'.",
+			passValue: "2",
+			sev:       model.SeverityHigh,
 		},
-		"kernel.dmesg_restrict": {
-			id:   "LYNIS-KERN-002",
-			name: "dmesg restricted to root (dmesg_restrict=1)",
-			rem:  "Set 'kernel.dmesg_restrict = 1' in /etc/sysctl.conf to prevent info leakage.",
-			sev:  model.SeverityMedium,
+		{
+			sysctlKey: "kernel.dmesg_restrict",
+			id:        "LYNIS-KERN-002",
+			name:      "dmesg restricted to root (dmesg_restrict=1)",
+			rem:       "Set 'kernel.dmesg_restrict = 1' in /etc/sysctl.conf to prevent info leakage.",
+			passValue: "1",
+			sev:       model.SeverityMedium,
 		},
-		"net.ipv4.conf.all.rp_filter": {
-			id:   "LYNIS-KERN-003",
-			name: "Reverse path filtering enabled",
-			rem:  "Set 'net.ipv4.conf.all.rp_filter = 1' in /etc/sysctl.conf to prevent IP spoofing.",
-			sev:  model.SeverityMedium,
+		{
+			sysctlKey: "net.ipv4.conf.all.rp_filter",
+			id:        "LYNIS-KERN-003",
+			name:      "Reverse path filtering enabled",
+			rem:       "Set 'net.ipv4.conf.all.rp_filter = 1' in /etc/sysctl.conf to prevent IP spoofing.",
+			passValue: "1",
+			sev:       model.SeverityMedium,
 		},
-		"net.ipv4.conf.all.accept_redirects": {
-			id:   "LYNIS-KERN-004",
-			name: "ICMP redirects disabled",
-			rem:  "Set 'net.ipv4.conf.all.accept_redirects = 0' to prevent MITM via ICMP redirects.",
-			sev:  model.SeverityMedium,
+		{
+			// accept_redirects=0 means redirects are DISABLED — that is the secure state.
+			sysctlKey: "net.ipv4.conf.all.accept_redirects",
+			id:        "LYNIS-KERN-004",
+			name:      "ICMP redirects disabled",
+			rem:       "Set 'net.ipv4.conf.all.accept_redirects = 0' to prevent MITM via ICMP redirects.",
+			passValue: "0",
+			sev:       model.SeverityMedium,
 		},
 	}
 
-	for sysctlKey, check := range kernelChecks {
-		if v := prop(p, "sysctl-"+strings.ReplaceAll(sysctlKey, ".", "_")); v == "1" || v == "2" {
+	for _, check := range kernelChecks {
+		v := prop(p, "sysctl-"+strings.ReplaceAll(check.sysctlKey, ".", "_"))
+		if v == "" {
+			continue // not present in report — skip rather than fail
+		}
+		if v == check.passValue {
 			f = append(f, lyPass(check.id, check.name, check.sev))
-		} else if v != "" {
+		} else {
 			f = append(f, lyFail(check.id, check.name, check.sev, check.rem))
 		}
 	}
