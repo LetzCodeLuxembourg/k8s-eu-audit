@@ -286,20 +286,28 @@ func buildLynisFindings(p map[string][]string) []model.Finding {
 		sev           model.Severity
 	}{
 		"kernel.randomize_va_space": {
-			"LYNIS-KERN-001", "ASLR enabled (randomize_va_space=2)", model.SeverityHigh,
-			"Set 'kernel.randomize_va_space = 2' in /etc/sysctl.conf and run 'sysctl -p'.",
+			id:   "LYNIS-KERN-001",
+			name: "ASLR enabled (randomize_va_space=2)",
+			rem:  "Set 'kernel.randomize_va_space = 2' in /etc/sysctl.conf and run 'sysctl -p'.",
+			sev:  model.SeverityHigh,
 		},
 		"kernel.dmesg_restrict": {
-			"LYNIS-KERN-002", "dmesg restricted to root (dmesg_restrict=1)", model.SeverityMedium,
-			"Set 'kernel.dmesg_restrict = 1' in /etc/sysctl.conf to prevent info leakage.",
+			id:   "LYNIS-KERN-002",
+			name: "dmesg restricted to root (dmesg_restrict=1)",
+			rem:  "Set 'kernel.dmesg_restrict = 1' in /etc/sysctl.conf to prevent info leakage.",
+			sev:  model.SeverityMedium,
 		},
 		"net.ipv4.conf.all.rp_filter": {
-			"LYNIS-KERN-003", "Reverse path filtering enabled", model.SeverityMedium,
-			"Set 'net.ipv4.conf.all.rp_filter = 1' in /etc/sysctl.conf to prevent IP spoofing.",
+			id:   "LYNIS-KERN-003",
+			name: "Reverse path filtering enabled",
+			rem:  "Set 'net.ipv4.conf.all.rp_filter = 1' in /etc/sysctl.conf to prevent IP spoofing.",
+			sev:  model.SeverityMedium,
 		},
 		"net.ipv4.conf.all.accept_redirects": {
-			"LYNIS-KERN-004", "ICMP redirects disabled", model.SeverityMedium,
-			"Set 'net.ipv4.conf.all.accept_redirects = 0' to prevent MITM via ICMP redirects.",
+			id:   "LYNIS-KERN-004",
+			name: "ICMP redirects disabled",
+			rem:  "Set 'net.ipv4.conf.all.accept_redirects = 0' to prevent MITM via ICMP redirects.",
+			sev:  model.SeverityMedium,
 		},
 	}
 
