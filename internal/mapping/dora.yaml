@@ -1,81 +1,418 @@
 id: dora
 name: "DORA — ICT Risk Management"
 version: "Regulation (EU) 2022/2554, in force January 2025"
+
+# =============================================================================
+# DORA applies to ~22,000 financial entities in the EU:
+#   banks, investment firms, payment institutions, crypto-asset service providers,
+#   insurance undertakings, trading venues, central counterparties, and their
+#   critical ICT third-party service providers.
+#
+# Five pillars of DORA ICT resilience:
+#   Art. 5–14  : ICT Risk Management Framework
+#   Art. 17–23 : ICT-Related Incident Management & Reporting
+#   Art. 24–27 : Digital Operational Resilience Testing (TLPT)
+#   Art. 28–44 : ICT Third-Party Risk Management
+#   Art. 45–56 : Information Sharing
+#
+# Supervisory authority in Luxembourg: CSSF
+#   Circulars: 25/880, 25/881, 25/882, 25/883 (April 2025)
+# =============================================================================
+
 controls:
-  - id: dora-ict-1
-    article: "Art. 5–10"
-    name: "ICT risk management framework"
+
+  # ---------------------------------------------------------------------------
+  # PILLAR 1: ICT RISK MANAGEMENT FRAMEWORK (Art. 5–14)
+  # ---------------------------------------------------------------------------
+
+  - id: dora-rm-1
+    article: "Art. 5–7"
+    name: "ICT risk management framework — governance and strategy"
     severity: CRITICAL
     description: >
-      Financial entities must maintain a comprehensive ICT risk management
-      framework covering identification, protection, detection, response
-      and recovery.
+      Financial entities must maintain a comprehensive ICT risk management framework
+      including: identification of ICT assets, protection/prevention measures,
+      detection of anomalous activities, response/recovery procedures, and
+      continuous improvement. The management body is personally accountable.
     remediation: >
-      Enforce Pod Security Standards, resource limits, and privilege restrictions.
-      Enable audit logging. Document risk acceptance decisions.
+      K8s: Enforce Pod Security Standards, enable RBAC, set resource limits.
+      Linux: Enable auditd, configure firewall, apply kernel hardening.
+      macOS: Enable SIP, FileVault, Application Firewall.
+      Windows: Enable UAC, BitLocker, Defender Firewall.
     mapped_checks:
-      - C-0004
-      - C-0013
-      - C-0057
-      - C-0067
-      - "1.2.19"
+      # Kubernetes — workload security (protection layer)
+      - C-0013   # Non-root containers
+      - C-0017   # Immutable container filesystem
+      - C-0057   # Privileged container
+      - C-0016   # Allow privilege escalation
+      - C-0088   # RBAC enabled
+      - C-0004   # Resource limits set
+      # Linux VM
+      - LYNIS-KERN-001   # ASLR enabled
+      - LYNIS-KERN-002   # dmesg restricted
+      - LYNIS-FW-001     # Firewall installed
+      - LYNIS-FW-002     # Firewall active
+      # macOS
+      - MACOS-SIP-001    # System Integrity Protection
+      - MACOS-FW-001     # Application Firewall
+      # Windows
+      - WIN-UAC-001      # User Account Control
+      - WIN-FW-001       # Firewall Domain profile
+      - WIN-FW-002       # Firewall Private profile
+      - WIN-FW-003       # Firewall Public profile
 
-  - id: dora-ict-2
-    article: "Art. 17–23"
-    name: "ICT-related incident management and reporting"
-    severity: CRITICAL
-    description: >
-      Financial entities must have processes for managing, classifying, and
-      reporting ICT-related incidents to competent authorities.
-    remediation: >
-      Configure comprehensive audit logging with a proper audit policy.
-      Deploy centralised log aggregation. Define incident response runbooks.
-    mapped_checks:
-      - "3.2.1"
-      - "1.2.19"
-      - C-0067
-
-  - id: dora-ict-3
-    article: "Art. 24–27"
-    name: "Digital operational resilience testing"
+  - id: dora-rm-2
+    article: "Art. 8–9"
+    name: "ICT asset identification and protection"
     severity: HIGH
     description: >
-      Financial entities must perform regular digital operational resilience
-      testing, including threat-led penetration testing for significant entities.
+      Financial entities must identify and classify all ICT assets (hardware,
+      software, data, infrastructure) and implement appropriate protection
+      measures including encryption, access controls, and network segmentation.
     remediation: >
-      Ensure workloads survive node failures (PDBs, multi-replica). Implement
-      chaos engineering. Run k8s-eu-audit in CI/CD on every change.
+      K8s: Implement NetworkPolicies. Enforce etcd encryption. Use image signing.
+      Linux/macOS/Windows: Enable full-disk encryption. Document all assets.
     mapped_checks:
-      - C-0068
-      - C-0069
-      - OVERALL_CIS_SCORE
+      # Kubernetes
+      - C-0030   # Ingress/Egress network control
+      - C-0031   # NetworkPolicy configured
+      - C-0066   # etcd encryption at rest
+      - C-0079   # No :latest image tags (supply chain)
+      - C-0036   # No sudo in container entrypoint
+      # Linux VM
+      - LYNIS-ENC-001    # Encryption tools installed
+      - LYNIS-INT-001    # File integrity monitoring (AIDE/Tripwire)
+      # macOS
+      - MACOS-FV-001     # FileVault encryption
+      - MACOS-FW-002     # Firewall stealth mode
+      # Windows
+      - WIN-BL-001       # BitLocker encryption
+      - WIN-SMB-001      # SMBv1 disabled
 
-  - id: dora-ict-4
-    article: "Art. 28–44"
-    name: "ICT third-party risk management"
+  - id: dora-rm-3
+    article: "Art. 10"
+    name: "Detection of anomalous activities"
     severity: CRITICAL
     description: >
-      Financial entities must manage ICT third-party risks and maintain a
-      register of ICT third-party service providers.
+      Financial entities must implement monitoring mechanisms to promptly detect
+      anomalous activities, including unauthorised access, unusual data transfers,
+      and configuration changes. Continuous monitoring is required.
     remediation: >
-      Only pull images from explicitly approved, audited registries. Pin all
-      image tags. Implement image signing. Audit all third-party Helm charts.
+      K8s: Enable Kubernetes audit logging with comprehensive policy.
+      Linux: Enable and configure auditd with rules for privileged commands.
+      Windows: Enable Security audit policy for logon and privilege use events.
+      macOS: Configure OpenBSM audit.
     mapped_checks:
-      - C-0078
-      - C-0079
-      - KSV030
+      # Kubernetes
+      - C-0067   # Audit logs enabled
+      # Linux VM
+      - LYNIS-LOG-001    # System logging configured
+      - LYNIS-LOG-002    # Auditd running
+      - LYNIS-LOG-003    # Log rotation configured
+      # macOS
+      - MACOS-LOG-001    # OpenBSM audit configured
+      # Windows
+      - WIN-AUD-001      # Logon events auditing
+      - WIN-AUD-002      # Privileged operations auditing
+      - WIN-AUD-003      # Security log size adequate
 
-  - id: dora-ict-5
-    article: "Art. 45–56"
-    name: "Information sharing and network security"
+  - id: dora-rm-4
+    article: "Art. 11–12"
+    name: "ICT business continuity and recovery"
+    severity: CRITICAL
+    description: >
+      Financial entities must have ICT business continuity policy and recovery
+      plans. RTO and RPO must be defined and tested. Critical functions must
+      maintain minimum service levels during disruptions.
+    remediation: >
+      K8s: Define PodDisruptionBudgets. Minimum 2 replicas for critical workloads.
+      Implement multi-zone deployment. Test failover regularly.
+    mapped_checks:
+      # Kubernetes
+      - C-0068   # No single-replica deployments
+      - C-0069   # PodDisruptionBudget defined
+
+  - id: dora-rm-5
+    article: "Art. 13–14"
+    name: "ICT security awareness and training"
     severity: MEDIUM
     description: >
-      Financial entities may participate in information sharing arrangements
-      on cyber threats and must maintain network security controls.
+      Financial entities must provide regular ICT security awareness programmes
+      and specialized training for staff with ICT risk management responsibilities.
+      Management bodies must receive training on ICT risks.
     remediation: >
-      Implement NetworkPolicies for all namespaces. Restrict egress to known
-      endpoints. Enable mutual TLS for service-to-service communication.
+      This control cannot be fully verified by technical scanning.
+      K8s hygiene indicators: minimal RBAC, no cluster-admin overuse.
+      Linux: Enforce strong password policies, disable unnecessary services.
     mapped_checks:
-      - C-0030
-      - C-0031
-      - "5.3.2"
+      # Kubernetes — hygiene indicators
+      - C-0035   # No unnecessary cluster-admin bindings
+      - C-0041   # ServiceAccount token automount disabled
+      - C-0044   # No hostPort usage
+      # Linux VM
+      - LYNIS-AUTH-001   # Password expiry policy
+      - LYNIS-AUTH-002   # Minimum password length
+      - LYNIS-USB-001    # USB storage restricted
+      # Windows
+      - WIN-PWD-001      # Password expiry configured
+      - WIN-PWD-002      # Minimum password length
+
+  # ---------------------------------------------------------------------------
+  # PILLAR 2: ICT INCIDENT MANAGEMENT AND REPORTING (Art. 17–23)
+  # ---------------------------------------------------------------------------
+
+  - id: dora-inc-1
+    article: "Art. 17–18"
+    name: "ICT incident detection, classification and reporting"
+    severity: CRITICAL
+    description: >
+      Financial entities must establish processes to detect, manage, log and
+      classify ICT-related incidents. Major incidents must be reported to CSSF
+      within 4 hours of classification (initial report), with detailed report
+      within 24 hours and final report within 1 month.
+      In Luxembourg: report via CSSF SERIMA portal.
+    remediation: >
+      K8s: Enable audit logging. Deploy centralised log aggregation (ELK/Loki).
+      All hosts: Enable system logging, auditd, security event auditing.
+      Establish incident classification procedure referencing CSSF guidelines.
+    mapped_checks:
+      # Kubernetes
+      - C-0067   # Kubernetes audit logging
+      # Linux VM
+      - LYNIS-LOG-001    # System logging daemon
+      - LYNIS-LOG-002    # Auditd running
+      # macOS
+      - MACOS-LOG-001    # OpenBSM audit
+      # Windows
+      - WIN-AUD-001      # Logon events audit
+      - WIN-AUD-002      # Privilege use audit
+      - WIN-AUD-003      # Log size adequate
+
+  - id: dora-inc-2
+    article: "Art. 19–20"
+    name: "Incident response — containment and recovery"
+    severity: HIGH
+    description: >
+      Financial entities must have documented procedures for incident containment,
+      eradication, and recovery. Processes must include communication to affected
+      clients and counterparties. Post-incident review is mandatory for major incidents.
+    remediation: >
+      K8s: Implement network segmentation via NetworkPolicies.
+      Ensure business continuity (PDBs, multi-replica). Test recovery procedures.
+    mapped_checks:
+      # Kubernetes
+      - C-0030   # Network segmentation (ingress/egress control)
+      - C-0031   # NetworkPolicy configured
+      - C-0068   # Multi-replica workloads
+      - C-0069   # PodDisruptionBudget
+      # Linux VM
+      - LYNIS-FW-002     # Firewall active for network containment
+      # Windows
+      - WIN-FW-001       # Firewall Domain
+      - WIN-FW-002       # Firewall Private
+      - WIN-FW-003       # Firewall Public
+
+  # ---------------------------------------------------------------------------
+  # PILLAR 3: DIGITAL OPERATIONAL RESILIENCE TESTING (Art. 24–27)
+  # ---------------------------------------------------------------------------
+
+  - id: dora-test-1
+    article: "Art. 24–25"
+    name: "Resilience testing programme"
+    severity: HIGH
+    description: >
+      Financial entities must establish a digital operational resilience testing
+      programme. At minimum: annual vulnerability assessments, network security
+      assessments, gap analyses, open-source analyses, and scenario-based tests.
+      Significant entities must perform TLPT (Threat-Led Penetration Testing)
+      every 3 years under CSSF oversight.
+    remediation: >
+      K8s: Run k8s-eu-audit in CI/CD on every cluster change.
+      Enable continuous vulnerability scanning via Trivy.
+      Perform annual CIS benchmark assessment (kube-bench).
+      Schedule quarterly cluster security reviews.
+    mapped_checks:
+      # Kubernetes — CIS benchmark indicators
+      - C-0005   # API server insecure port
+      - C-0088   # RBAC enabled
+      - C-0053   # Access container service account
+      - C-0063   # etcd peer TLS
+      # Linux VM
+      - LYNIS-UPD-001    # System updates current
+      - LYNIS-UPD-002    # No vulnerable packages
+      - LYNIS-INT-001    # File integrity monitoring
+      # macOS
+      - MACOS-UPD-001    # Pending security updates
+      # Windows
+      - WIN-AV-001       # Defender AV enabled
+      - WIN-AV-002       # AV definitions current
+      - WIN-UPD-001      # Windows Update running
+      - WIN-UPD-002      # Automatic updates configured
+
+  - id: dora-test-2
+    article: "Art. 26"
+    name: "Advanced testing — TLPT requirements"
+    severity: MEDIUM
+    description: >
+      Significant financial entities must conduct Threat-Led Penetration Testing
+      every 3 years. TLPT must cover live production systems and critical functions.
+      CSSF coordinates TLPT under TIBER-EU framework.
+      This control verifies technical prerequisites for TLPT readiness.
+    remediation: >
+      K8s: Ensure all cluster configurations are documented and version-controlled.
+      All hosts: Maintain updated asset inventory. Ensure logging captures
+      red team activity for TLPT evidence.
+    mapped_checks:
+      # Kubernetes — TLPT prereqs: audit trail + documented config
+      - C-0067   # Audit logging (TLPT requires evidence capture)
+      - C-0088   # RBAC (access control for TLPT scope)
+      # All hosts
+      - LYNIS-LOG-002    # Auditd (Linux audit trail for TLPT)
+      - WIN-AUD-001      # Windows audit trail for TLPT
+      - MACOS-LOG-001    # macOS audit trail
+
+  # ---------------------------------------------------------------------------
+  # PILLAR 4: ICT THIRD-PARTY RISK MANAGEMENT (Art. 28–44)
+  # ---------------------------------------------------------------------------
+
+  - id: dora-tpp-1
+    article: "Art. 28–30"
+    name: "ICT third-party risk policy and due diligence"
+    severity: CRITICAL
+    description: >
+      Financial entities must have a policy on ICT third-party risk, maintain
+      a Register of Information (RoI) of all ICT service providers, and perform
+      due diligence before and during all ICT outsourcing arrangements.
+      CSSF requires the RoI to be submitted via SERIMA portal.
+    remediation: >
+      K8s: Only pull images from explicitly approved, audited registries.
+      Pin all image digests. Implement image signing (Cosign/Notary).
+      Maintain SBOM for all container images. Audit all Helm chart sources.
+    mapped_checks:
+      # Kubernetes — supply chain controls
+      - C-0078   # Images from trusted registries only
+      - C-0079   # No :latest tags (pinned versions)
+      - C-0036   # No sudo in container entrypoint
+      - C-0270   # imagePullPolicy: Always (fresh images)
+      # macOS
+      - MACOS-GK-001     # Gatekeeper (signed software only)
+      # Windows
+      - WIN-AV-001       # Defender (malware in supply chain)
+
+  - id: dora-tpp-2
+    article: "Art. 31–36"
+    name: "Key contractual provisions and subcontracting"
+    severity: HIGH
+    description: >
+      ICT contracts with third-party providers must include: security requirements,
+      audit rights, data location in EU, exit strategies, and incident reporting.
+      Subcontracting of critical functions requires CSSF notification.
+      This control verifies technical enforcement of contractual security requirements.
+    remediation: >
+      K8s: Enforce network policies to restrict third-party service access.
+      Ensure all third-party components run with minimal privileges (non-root, no cluster-admin).
+    mapped_checks:
+      # Kubernetes — enforce security on third-party workloads
+      - C-0013   # Third-party containers run as non-root
+      - C-0057   # Third-party containers not privileged
+      - C-0015   # No privileged RBAC for third-party SAs
+      - C-0058   # Third-party SAs have no secret access
+      - C-0030   # Network access to third-party services controlled
+      # Linux VM
+      - LYNIS-AUTH-003   # MFA for third-party access (PAM)
+      # Windows
+      - WIN-RDP-002      # NLA for remote third-party access
+
+  - id: dora-tpp-3
+    article: "Art. 37–44"
+    name: "Oversight of critical ICT third-party providers"
+    severity: HIGH
+    description: >
+      Critical ICT third-party providers (CTPPs) designated by ESAs are subject
+      to direct oversight. Financial entities using CTPPs must ensure contractual
+      compliance with oversight requirements and maintain exit strategies.
+    remediation: >
+      Maintain documented exit strategies for all critical ICT providers.
+      K8s: Ensure workloads are portable (no vendor lock-in via proprietary APIs).
+      Use cloud-agnostic Kubernetes configurations. Maintain infrastructure-as-code.
+    mapped_checks:
+      # Kubernetes — portability and independence indicators
+      - C-0068   # No single-replica (not dependent on single provider instance)
+      - C-0069   # PodDisruptionBudget (resilience to provider maintenance)
+      - C-0031   # NetworkPolicy (control over provider network access)
+
+  # ---------------------------------------------------------------------------
+  # PILLAR 5: INFORMATION SHARING (Art. 45–56)
+  # ---------------------------------------------------------------------------
+
+  - id: dora-share-1
+    article: "Art. 45–56"
+    name: "Cyber threat information sharing"
+    severity: MEDIUM
+    description: >
+      Financial entities may voluntarily participate in information-sharing
+      arrangements on cyber threats. Participation must be notified to CSSF.
+      Shared information must be protected — no inadvertent disclosure of
+      sensitive data through information sharing channels.
+    remediation: >
+      K8s: Implement strict NetworkPolicies to control outbound connections.
+      Ensure sensitive data (secrets, configmaps) is not exposed.
+      Use mTLS for inter-service communication.
+      Linux/Windows: Restrict outbound connections via firewall.
+    mapped_checks:
+      # Kubernetes — data protection for sharing
+      - C-0030   # Egress control (no unauthorised outbound)
+      - C-0031   # NetworkPolicy configured
+      - C-0058   # Secret access controlled
+      - C-0066   # Data at rest encrypted
+      # Linux VM
+      - LYNIS-FW-001     # Firewall controls outbound
+      - LYNIS-FW-002     # Firewall active
+      # macOS
+      - MACOS-FW-001     # Firewall controls outbound
+      # Windows
+      - WIN-FW-001       # Firewall Domain (outbound control)
+      - WIN-FW-002       # Firewall Private
+
+  # ---------------------------------------------------------------------------
+  # DORA SPECIFIC: Authentication requirements (cross-pillar)
+  # Reference: Art. 9(2) — ICT security policies must include MFA
+  # ---------------------------------------------------------------------------
+
+  - id: dora-auth-1
+    article: "Art. 9(2)"
+    name: "Strong authentication and access control"
+    severity: CRITICAL
+    description: >
+      DORA explicitly requires strong authentication including MFA for access to
+      ICT systems supporting critical functions. Access must be based on
+      need-to-know and least-privilege principles.
+      CSSF circular 22/806 extended this to all remote access to financial systems.
+    remediation: >
+      K8s: Disable anonymous auth. Enforce RBAC. Use OIDC with MFA provider.
+      Linux: Configure PAM with MFA (pam_u2f, pam_google_authenticator).
+      macOS: Enable screen lock. Disable password SSH. Use key-based auth.
+      Windows: Enable NLA for RDP. Configure password policy. Enable BitLocker.
+    mapped_checks:
+      # Kubernetes
+      - C-0005   # No insecure API server port
+      - C-0088   # RBAC enabled
+      - C-0262   # Anonymous auth disabled
+      - C-0035   # No unnecessary cluster-admin
+      # Linux VM
+      - LYNIS-SSH-001    # SSH root login disabled
+      - LYNIS-SSH-002    # SSH Protocol 2 only
+      - LYNIS-SSH-003    # SSH password auth disabled
+      - LYNIS-AUTH-001   # Password expiry policy
+      - LYNIS-AUTH-002   # Password minimum length
+      - LYNIS-AUTH-003   # MFA PAM module
+      # macOS
+      - MACOS-SCR-001    # Screen lock with password
+      - MACOS-SSH-001    # Remote Login controlled
+      - MACOS-SSH-002    # SSH root disabled
+      # Windows
+      - WIN-RDP-001      # RDP disabled or restricted
+      - WIN-RDP-002      # RDP requires NLA
+      - WIN-PWD-001      # Password expiry
+      - WIN-PWD-002      # Password length
+      - WIN-SCR-001      # Screen lock

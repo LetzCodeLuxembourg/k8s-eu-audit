@@ -10,15 +10,26 @@ controls:
       Policies for risk analysis and information system security, including risk
       management procedures for network and information systems.
     remediation: >
-      Enforce Pod Security Standards (restricted profile). Set resource limits,
+      K8s: Enforce Pod Security Standards (restricted profile). Set resource limits,
       prevent privilege escalation, and run containers as non-root.
+      VM/Host: Enable SIP (macOS), UAC (Windows), kernel hardening (Linux).
     mapped_checks:
-      - C-0013 # Non-root containers
-      - C-0017 # Immutable container filesystem
-      - C-0057 # Privileged container
-      - C-0016 # Allow privilege escalation
-      - C-0020 # Mount service principal
-      - C-0055 # Linux hardening
+      # Kubernetes
+      - C-0013   # Non-root containers
+      - C-0017   # Immutable container filesystem
+      - C-0057   # Privileged container
+      - C-0016   # Allow privilege escalation
+      - C-0020   # Mount service principal
+      - C-0055   # Linux hardening
+      # Linux VM (Lynis)
+      - LYNIS-KERN-001   # ASLR enabled
+      - LYNIS-KERN-002   # dmesg restricted
+      - LYNIS-KERN-003   # reverse path filtering
+      - LYNIS-KERN-004   # ICMP redirects disabled
+      # macOS
+      - MACOS-SIP-001    # System Integrity Protection
+      # Windows
+      - WIN-UAC-001      # User Account Control
 
   - id: art21-2-b
     article: "21.2(b)"
@@ -28,10 +39,23 @@ controls:
       Procedures for detecting, analysing, containing, and recovering from
       incidents. Significant incidents must be reported to competent authorities.
     remediation: >
-      Enable Kubernetes audit logging with a comprehensive audit policy.
-      Ensure audit-log-path and audit-log-maxage are configured on the API server.
+      K8s: Enable Kubernetes audit logging with a comprehensive audit policy.
+      Linux: Install and configure auditd with appropriate rules.
+      macOS: Configure OpenBSM audit.
+      Windows: Enable Security audit policy for logon events and privilege use.
     mapped_checks:
-      - C-0067 # Audit logs enabled
+      # Kubernetes
+      - C-0067   # Audit logs enabled
+      # Linux VM (Lynis)
+      - LYNIS-LOG-001    # system logging daemon
+      - LYNIS-LOG-002    # auditd running
+      - LYNIS-LOG-003    # log rotation
+      # macOS
+      - MACOS-LOG-001    # OpenBSM audit configured
+      # Windows
+      - WIN-AUD-001      # Logon events auditing
+      - WIN-AUD-002      # Privileged operations auditing
+      - WIN-AUD-003      # Security event log size
 
   - id: art21-2-c
     article: "21.2(c)"
@@ -41,11 +65,13 @@ controls:
       Plans for maintaining or quickly restoring services after an incident,
       including backup management and disaster recovery procedures.
     remediation: >
-      Define PodDisruptionBudgets for all critical workloads. Ensure no
+      K8s: Define PodDisruptionBudgets for all critical workloads. Ensure no
       single-replica deployments exist for production services.
     mapped_checks:
-      - C-0068 # Single replica deployments
-      - C-0069 # No PDB defined
+      # Kubernetes only — business continuity at VM level is covered by
+      # infrastructure redundancy (HA, backups) outside scanner scope
+      - C-0068   # Single replica deployments
+      - C-0069   # No PDB defined
 
   - id: art21-2-d
     article: "21.2(d)"
@@ -55,13 +81,16 @@ controls:
       Security in the supply chain, including security aspects of relationships
       with direct suppliers and service providers.
     remediation: >
-      Allow only images from explicitly approved registries. Pin all image tags
-      (never use :latest). Implement image signing (Cosign/Notary).
+      K8s: Allow only images from explicitly approved registries. Pin all image tags.
+      macOS: Enable Gatekeeper to enforce software signing.
     mapped_checks:
-      - C-0036 # Sudo in container entrypoint
-      - C-0014 # Resources memory request
-      - C-0270 # Ensure image pull policy is set to Always
-      - C-0046 # Insecure capabilities
+      # Kubernetes
+      - C-0036   # Sudo in container entrypoint
+      - C-0014   # Resources memory request
+      - C-0270   # Image pull policy Always
+      - C-0046   # Insecure capabilities
+      # macOS
+      - MACOS-GK-001     # Gatekeeper enabled
 
   - id: art21-2-e
     article: "21.2(e)"
@@ -71,12 +100,32 @@ controls:
       Security in the acquisition, development, and maintenance of network
       and information systems, including vulnerability handling.
     remediation: >
-      Define NetworkPolicies for every namespace to restrict ingress and egress.
-      Default-deny policies should be the baseline.
+      K8s: Define NetworkPolicies for every namespace. Default-deny baseline.
+      Linux: Enable and configure firewall (ufw/firewalld). Enable disk encryption.
+      macOS: Enable Application Firewall and FileVault. Disable sharing services.
+      Windows: Enable all Defender Firewall profiles. Disable SMBv1. Enable BitLocker.
     mapped_checks:
-      - C-0030 # Ingress and Egress blocked
-      - C-0031 # Network policy not set
-      - C-0066 # Secret/etcd encryption
+      # Kubernetes
+      - C-0030   # Ingress and Egress blocked
+      - C-0031   # Network policy not set
+      - C-0066   # Secret/etcd encryption
+      # Linux VM (Lynis)
+      - LYNIS-FW-001     # Firewall installed
+      - LYNIS-FW-002     # Firewall active
+      - LYNIS-ENC-001    # Encryption tools installed
+      # macOS
+      - MACOS-FV-001     # FileVault encryption
+      - MACOS-FW-001     # Application Firewall
+      - MACOS-FW-002     # Stealth mode
+      - MACOS-SHR-001    # Screen sharing disabled
+      - MACOS-SHR-002    # File sharing disabled
+      - MACOS-SHR-003    # Remote management disabled
+      # Windows
+      - WIN-BL-001       # BitLocker encryption
+      - WIN-FW-001       # Firewall Domain profile
+      - WIN-FW-002       # Firewall Private profile
+      - WIN-FW-003       # Firewall Public profile
+      - WIN-SMB-001      # SMBv1 disabled
 
   - id: art21-2-f
     article: "21.2(f)"
@@ -86,13 +135,25 @@ controls:
       Policies and procedures to assess the effectiveness of cybersecurity
       risk-management measures, including vulnerability handling.
     remediation: >
-      Remediate all CRITICAL and HIGH CVEs in container images. Implement
-      regular vulnerability scanning in CI/CD pipelines. Install Trivy for
-      full vulnerability coverage.
+      K8s: Remediate CRITICAL and HIGH CVEs in container images.
+      Linux: Keep packages up to date. Run regular vulnerability scans.
+      macOS: Apply macOS security updates promptly.
+      Windows: Configure automatic Windows Update. Keep Defender signatures current.
     mapped_checks:
-      - C-0270 # Image pull policy Always (freshness signal)
-      - C-0016 # Allow privilege escalation
-      - C-0057 # Privileged container
+      # Kubernetes
+      - C-0270   # Image pull policy (freshness)
+      - C-0016   # Privilege escalation
+      - C-0057   # Privileged container
+      # Linux VM (Lynis)
+      - LYNIS-UPD-001    # System updates applied
+      - LYNIS-UPD-002    # No vulnerable packages
+      # macOS
+      - MACOS-UPD-001    # Pending security updates
+      # Windows
+      - WIN-AV-001       # Defender Antivirus enabled
+      - WIN-AV-002       # AV definitions up to date
+      - WIN-UPD-001      # Windows Update service running
+      - WIN-UPD-002      # Automatic updates configured
 
   - id: art21-2-g
     article: "21.2(g)"
@@ -102,13 +163,16 @@ controls:
       Policies to assess effectiveness of cybersecurity measures, including
       use of industry benchmarks.
     remediation: >
-      Achieve a passing CIS Kubernetes Benchmark score. Automate benchmark
-      checks in CI/CD to prevent regressions.
+      K8s: Achieve a passing CIS Kubernetes Benchmark score.
+      Linux: Install AIDE or Tripwire for file integrity monitoring.
     mapped_checks:
-      - C-0005 # API server insecure port
-      - C-0088 # RBAC enabled
-      - C-0053 # Access container service account
-      - C-0063 # Etcd peer TLS
+      # Kubernetes
+      - C-0005   # API server insecure port
+      - C-0088   # RBAC enabled
+      - C-0053   # Access container service account
+      - C-0063   # Etcd peer TLS
+      # Linux VM (Lynis)
+      - LYNIS-INT-001    # File integrity tool installed
 
   - id: art21-2-h
     article: "21.2(h)"
@@ -117,14 +181,17 @@ controls:
     description: >
       Basic cyber hygiene practices and cybersecurity training for staff.
     remediation: >
-      Remove cluster-admin bindings not strictly required. Disable ServiceAccount
-      token automounting where not needed. Apply least-privilege RBAC.
+      K8s: Remove unnecessary cluster-admin bindings. Disable SA token automounting.
+      Linux: Disable USB storage. Apply principle of least privilege.
     mapped_checks:
-      - C-0035 # Cluster admin binding
-      - C-0041 # ServiceAccount token automount
-      - C-0044 # Container hostPort
-      - C-0048 # HostPath mount
-      - C-0038 # Host PID/IPC privileges
+      # Kubernetes
+      - C-0035   # Cluster admin binding
+      - C-0041   # ServiceAccount token automount
+      - C-0044   # Container hostPort
+      - C-0048   # HostPath mount
+      - C-0038   # Host PID/IPC privileges
+      # Linux VM (Lynis)
+      - LYNIS-USB-001    # USB storage disabled
 
   - id: art21-2-i
     article: "21.2(i)"
@@ -134,14 +201,14 @@ controls:
       Policies for human resources security, access control policies, and
       asset management covering network and information systems.
     remediation: >
-      Disable anonymous authentication on the API server. Enable RBAC.
-      Audit all service account permissions regularly.
+      K8s: Disable anonymous auth on API server. Enable RBAC. Audit SA permissions.
     mapped_checks:
-      - C-0015 # Privileged RBAC roles
-      - C-0058 # Access to secrets
-      - C-0036 # Sudo in container entrypoint
-      - C-0187 # Roles with delete capabilities
-      - C-0188 # Roles with read secrets permissions
+      # Kubernetes
+      - C-0015   # Privileged RBAC roles
+      - C-0058   # Access to secrets
+      - C-0036   # Sudo in container entrypoint
+      - C-0187   # Roles with delete capabilities
+      - C-0188   # Roles with read secrets permissions
 
   - id: art21-2-j
     article: "21.2(j)"
@@ -151,10 +218,30 @@ controls:
       Use of multi-factor authentication or continuous authentication
       solutions where appropriate.
     remediation: >
-      Disable anonymous access. Remove insecure API server ports. Enable RBAC.
-      Ensure all human access to clusters uses federated identity with MFA.
+      K8s: Disable anonymous access. Remove insecure API server ports. Enable RBAC.
+      Linux: Configure MFA via PAM (pam_u2f, pam_google_authenticator). Set password policies.
+      macOS: Enable screen lock with immediate password. Disable SSH if not needed.
+      Windows: Enable NLA for RDP. Configure screen lock. Set password expiry.
     mapped_checks:
-      - C-0005 # API server insecure port
-      - C-0088 # RBAC enabled
-      - C-0262 # Anonymous access enabled
-      - C-0256 # Configured liveness probe
+      # Kubernetes
+      - C-0005   # API server insecure port
+      - C-0088   # RBAC enabled
+      - C-0262   # Anonymous access enabled
+      - C-0256   # Configured liveness probe
+      # Linux VM (Lynis)
+      - LYNIS-SSH-001    # SSH root login disabled
+      - LYNIS-SSH-002    # SSH Protocol 2 enforced
+      - LYNIS-SSH-003    # SSH password auth disabled
+      - LYNIS-AUTH-001   # Password expiry policy
+      - LYNIS-AUTH-002   # Minimum password length
+      - LYNIS-AUTH-003   # MFA PAM module
+      # macOS
+      - MACOS-SCR-001    # Screen lock with password
+      - MACOS-SSH-001    # Remote Login disabled
+      - MACOS-SSH-002    # SSH root login disabled
+      # Windows
+      - WIN-PWD-001      # Password expiry policy
+      - WIN-PWD-002      # Minimum password length
+      - WIN-RDP-001      # RDP disabled or restricted
+      - WIN-RDP-002      # RDP requires NLA
+      - WIN-SCR-001      # Screen lock configured

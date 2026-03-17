@@ -15,28 +15,46 @@ type Orchestrator struct {
 func NewOrchestrator() *Orchestrator {
 	return &Orchestrator{
 		scanners: []Scanner{
+			// Kubernetes layer
 			NewKubescapeScanner(),
 			NewTrivyScanner(),
 			NewKubeBenchScanner(),
+			// Host / VM layer
+			NewLynisScanner(),   // Linux VMs (requires root)
+			NewMacOSScanner(),   // macOS hosts
+			NewWindowsScanner(), // Windows hosts
 		},
 	}
 }
 
-// RunAll executes every available scanner and returns merged findings.
-// Missing or failing scanners emit warnings but never abort the run.
-func (o *Orchestrator) RunAll(opts RunOptions) (findings []model.Finding, used []string, warnings []string, err error) {
+// RunAll executes every available scanner appropriate for the requested mode.
+// Missing scanners emit a warning but never abort the run.
+func (o *Orchestrator) RunAll(opts RunOptions) (findings []model.Finding, usedScanners []string, warnings []string, err error) {
 	for _, s := range o.scanners {
 		if !s.Available() {
-			warnings = append(warnings, fmt.Sprintf("⚠  %s not found in PATH — skipping", s.Name()))
+			// Only warn about K8s scanners when doing a K8s scan
+			// Host scanners silently skip when not on their platform
+			if opts.IsK8sScan() {
+				switch s.Name() {
+				case "kubescape", "trivy", "kube-bench":
+					warnings = append(warnings, fmt.Sprintf("⚠  %s not found in PATH — skipping", s.Name()))
+				}
+			}
 			continue
 		}
+
 		result, runErr := s.Run(opts)
 		if runErr != nil {
 			warnings = append(warnings, fmt.Sprintf("⚠  %s error: %v", s.Name(), runErr))
 			continue
 		}
+		if len(result) == 0 {
+			continue // scanner returned nothing (e.g. host scanner skipped in k8s-only mode)
+		}
+
 		findings = append(findings, result...)
-		used = append(used, s.Name())
+		usedScanners = append(usedScanners, s.Name())
 	}
-	return
+
+	return findings, usedScanners, warnings, nil
 }
