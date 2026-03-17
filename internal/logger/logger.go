@@ -53,7 +53,6 @@ var (
 	cyan    = color.New(color.FgCyan, color.Bold)
 	blue    = color.New(color.FgBlue, color.Bold)
 	magenta = color.New(color.FgMagenta, color.Bold)
-	white   = color.New(color.FgHiWhite)
 )
 
 // out is stderr — keeps stdout clean for JSON output
@@ -138,8 +137,7 @@ func staticBanner(version, mode string, frameworks []string) {
 
 // typewrite prints text character by character.
 func typewrite(text string, c *color.Color, delay time.Duration) {
-	runes := []rune(text)
-	for _, r := range runes {
+	for _, r := range text {
 		c.Fprintf(out, "%c", r)
 		time.Sleep(delay)
 	}

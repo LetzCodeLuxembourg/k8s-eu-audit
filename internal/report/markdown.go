@@ -19,7 +19,7 @@ func RenderMarkdown(r model.ComplianceReport) string {
 
 	// Summary
 	b.WriteString("## Summary\n\n")
-	b.WriteString(fmt.Sprintf("| Metric | Value |\n|--------|-------|\n"))
+	b.WriteString("| Metric | Value |\n|--------|-------|\n")
 	b.WriteString(fmt.Sprintf("| Overall Score | **%.0f%%** |\n", r.Summary.OverallScore))
 	b.WriteString(fmt.Sprintf("| Status | **%s** |\n", r.Summary.Status))
 	b.WriteString(fmt.Sprintf("| Pass | %d |\n", r.Summary.TotalPass))
