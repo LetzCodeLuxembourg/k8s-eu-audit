@@ -456,15 +456,15 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## About
 
-Built by [Łukasz Ozimek](https://linkedin.com/in/lozimek) — [Letz Code S.A.R.L.](https://letzcode.lu), Luxembourg.
+Built by [Łukasz Ozimek](https://linkedin.com/in/lukaszozimek1) — [Letz Code S.A.R.L.](https://letzcode.io), Luxembourg.
 
 6 years managing 300+ Kubernetes clusters at the European Commission. Direct experience with CSSF (Luxembourg financial regulator), Mastercard, and regulated-sector infrastructure at scale. Security Clearance: Top Secret (NATO, ESA, EU).
 
 This tool exists because I kept seeing the same gap: security teams had great scanning tools, compliance teams had great GRC platforms, and nobody had anything that connected the two in the language EU regulators actually use — across the full infrastructure stack, not just Kubernetes.
 
 **Questions or want to discuss your NIS2/DORA gap assessment?**
-→ [lozimek@letzcode.lu](mailto:lozimek@letzcode.lu)
-→ [LinkedIn](https://linkedin.com/in/lozimek)
+→ [lo@letzcode.io](mailto:lo@letzcode.io)
+→ [LinkedIn](https://linkedin.com/in/lukaszozimek1)
 → [GitHub Issues](https://github.com/letzcode/k8s-eu-audit/issues)
 
 ---
