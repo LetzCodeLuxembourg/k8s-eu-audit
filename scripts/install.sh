@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-REPO="letzcode/k8s-eu-audit"
+REPO="LetzCodeLuxembourg/k8s-eu-audit"
 BINARY="k8s-eu-audit"
 INSTALL_DIR="/usr/local/bin"
 
