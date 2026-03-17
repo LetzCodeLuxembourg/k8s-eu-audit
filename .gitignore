@@ -1,0 +1,8 @@
+bin/
+dist/
+*.exe
+*.out
+*.test
+*.coverprofile
+.env
+*.license-key

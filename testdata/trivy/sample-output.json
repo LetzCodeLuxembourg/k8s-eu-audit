@@ -1,0 +1,4 @@
+{
+  "_comment": "Replace with real trivy k8s --format json output for unit tests.",
+  "Findings": []
+}

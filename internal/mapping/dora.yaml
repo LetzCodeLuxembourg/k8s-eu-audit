@@ -1,0 +1,81 @@
+id: dora
+name: "DORA — ICT Risk Management"
+version: "Regulation (EU) 2022/2554, in force January 2025"
+controls:
+  - id: dora-ict-1
+    article: "Art. 5–10"
+    name: "ICT risk management framework"
+    severity: CRITICAL
+    description: >
+      Financial entities must maintain a comprehensive ICT risk management
+      framework covering identification, protection, detection, response
+      and recovery.
+    remediation: >
+      Enforce Pod Security Standards, resource limits, and privilege restrictions.
+      Enable audit logging. Document risk acceptance decisions.
+    mapped_checks:
+      - C-0004
+      - C-0013
+      - C-0057
+      - C-0067
+      - "1.2.19"
+
+  - id: dora-ict-2
+    article: "Art. 17–23"
+    name: "ICT-related incident management and reporting"
+    severity: CRITICAL
+    description: >
+      Financial entities must have processes for managing, classifying, and
+      reporting ICT-related incidents to competent authorities.
+    remediation: >
+      Configure comprehensive audit logging with a proper audit policy.
+      Deploy centralised log aggregation. Define incident response runbooks.
+    mapped_checks:
+      - "3.2.1"
+      - "1.2.19"
+      - C-0067
+
+  - id: dora-ict-3
+    article: "Art. 24–27"
+    name: "Digital operational resilience testing"
+    severity: HIGH
+    description: >
+      Financial entities must perform regular digital operational resilience
+      testing, including threat-led penetration testing for significant entities.
+    remediation: >
+      Ensure workloads survive node failures (PDBs, multi-replica). Implement
+      chaos engineering. Run k8s-eu-audit in CI/CD on every change.
+    mapped_checks:
+      - C-0068
+      - C-0069
+      - OVERALL_CIS_SCORE
+
+  - id: dora-ict-4
+    article: "Art. 28–44"
+    name: "ICT third-party risk management"
+    severity: CRITICAL
+    description: >
+      Financial entities must manage ICT third-party risks and maintain a
+      register of ICT third-party service providers.
+    remediation: >
+      Only pull images from explicitly approved, audited registries. Pin all
+      image tags. Implement image signing. Audit all third-party Helm charts.
+    mapped_checks:
+      - C-0078
+      - C-0079
+      - KSV030
+
+  - id: dora-ict-5
+    article: "Art. 45–56"
+    name: "Information sharing and network security"
+    severity: MEDIUM
+    description: >
+      Financial entities may participate in information sharing arrangements
+      on cyber threats and must maintain network security controls.
+    remediation: >
+      Implement NetworkPolicies for all namespaces. Restrict egress to known
+      endpoints. Enable mutual TLS for service-to-service communication.
+    mapped_checks:
+      - C-0030
+      - C-0031
+      - "5.3.2"

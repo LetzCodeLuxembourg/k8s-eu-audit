@@ -1,0 +1,36 @@
+project_name: k8s-eu-audit
+
+builds:
+  - id: k8s-eu-audit
+    main: ./cmd/k8s-eu-audit
+    binary: k8s-eu-audit
+    ldflags:
+      - -s -w
+      - -X github.com/letzcode/k8s-eu-audit/internal/cli.version={{.Version}}
+      - -X github.com/letzcode/k8s-eu-audit/internal/cli.commit={{.Commit}}
+      - -X github.com/letzcode/k8s-eu-audit/internal/cli.date={{.Date}}
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude: ["^docs:", "^test:", "^chore:"]
+
+brews:
+  - name: k8s-eu-audit
+    repository:
+      owner: letzcode
+      name: homebrew-tap
+    description: "Kubernetes compliance scanner for EU regulations (NIS2, DORA)"
+    license: "Apache-2.0"
