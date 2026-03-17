@@ -7,3 +7,4 @@ dist/
 .env
 *.license-key
 .DS_Store
+.DS_Store
