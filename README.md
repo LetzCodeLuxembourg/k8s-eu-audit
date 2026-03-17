@@ -37,7 +37,10 @@ Overall NIS2 Compliance Score: 63%  ⚠ WARN
 
 Full report: k8s-eu-audit-nis2-2026-03-17.html
 ```
+---
+## Demo
 
+![k8s-eu-audit demo](assets/demo.gif)
 ---
 
 ## The problem
