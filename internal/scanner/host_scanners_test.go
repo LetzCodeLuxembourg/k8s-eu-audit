@@ -54,19 +54,6 @@ sysctl-kernel_dmesg_restrict=0
 sysctl-net_ipv4_conf_all_accept_redirects=1
 `)
 
-var lynisReportPartial = []byte(`
-# Partial compliance
-ssh-root-login=no
-ssh-protocol=2
-ssh-password-authentication=yes
-firewall-software=ufw
-firewall-active=1
-log-system=rsyslog
-auditd-running=0
-password-max-days=90
-pam-modules=pam_unix,pam_env
-`)
-
 func TestLynisScanner_Name(t *testing.T) {
 	s := NewLynisScanner()
 	if s.Name() != "lynis" {

@@ -62,11 +62,6 @@ func ps(script string) string {
 	return strings.TrimSpace(string(out))
 }
 
-// psContains runs PS and checks output for a substring.
-func psContains(script string, subs ...string) bool {
-	return contains(ps(script), subs...)
-}
-
 func winPass(id, name string, sev model.Severity) model.Finding {
 	return model.Finding{
 		ID: id, Source: "windows", ControlID: id,
