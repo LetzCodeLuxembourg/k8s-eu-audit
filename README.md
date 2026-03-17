@@ -2,10 +2,9 @@
 
 > EU compliance scanner for Kubernetes clusters and host infrastructure — built for auditors, not DevOps engineers.
 
-[![GitHub release](https://img.shields.io/github/v/release/letzcode/k8s-eu-audit)](https://github.com/letzcode/k8s-eu-audit/releases)
+[![GitHub release](https://img.shields.io/github/v/release/LetzCodeLuxembourg/k8s-eu-audit)](https://github.com/letzcode/k8s-eu-audit/releases)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/letzcode/k8s-eu-audit)](https://goreportcard.com/report/github.com/letzcode/k8s-eu-audit)
-[![CNCF Landscape](https://img.shields.io/badge/CNCF%20Landscape-security-blue)](https://landscape.cncf.io/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/LetzCodeLuxembourg/k8s-eu-audit)](https://goreportcard.com/report/github.com/LetzCodeLuxembourg/k8s-eu-audit)
 
 ```
 $ k8s-eu-audit scan --framework nis2 --mode hybrid
@@ -111,16 +110,16 @@ sudo k8s-eu-audit scan --framework nis2 --mode hybrid
 ### Homebrew (macOS/Linux)
 
 ```bash
-brew install letzcode/tap/k8s-eu-audit
+brew install LetzCodeLuxembourg/tap/k8s-eu-audit
 ```
 
 ### Binary (all platforms)
 
-Download the latest release from [GitHub Releases](https://github.com/letzcode/k8s-eu-audit/releases).
+Download the latest release from [GitHub Releases](https://github.com/LetzCodeLuxembourg/k8s-eu-audit/releases).
 
 ```bash
 # Linux amd64
-curl -L https://github.com/letzcode/k8s-eu-audit/releases/latest/download/k8s-eu-audit_linux_amd64.tar.gz | tar xz
+curl -L https://github.com/LetzCodeLuxembourg/k8s-eu-audit/releases/latest/download/k8s-eu-audit_linux_amd64.tar.gz | tar xz
 sudo mv k8s-eu-audit /usr/local/bin/
 ```
 
@@ -129,14 +128,14 @@ sudo mv k8s-eu-audit /usr/local/bin/
 ```bash
 docker run --rm \
   -v ~/.kube/config:/root/.kube/config:ro \
-  ghcr.io/letzcode/k8s-eu-audit:latest \
+  ghcr.io/LetzCodeLuxembourg/k8s-eu-audit:latest \
   scan --framework nis2
 ```
 
 ### From source
 
 ```bash
-go install github.com/letzcode/k8s-eu-audit/cmd/k8s-eu-audit@latest
+go install github.com/LetzCodeLuxembourg/k8s-eu-audit/cmd/k8s-eu-audit@latest
 ```
 
 ### External scanners (optional)
@@ -428,7 +427,7 @@ DORA applies to ~22,000 EU financial entities from January 2025. In Luxembourg s
 - [ ] Scheduled scans with Slack/Teams alerting
 - [ ] CRA (Cyber Resilience Act) — in force December 2027
 
-See [GitHub Issues](https://github.com/letzcode/k8s-eu-audit/issues) to vote on features.
+See [GitHub Issues](https://github.com/LetzCodeLuxembourg/k8s-eu-audit/issues) to vote on features.
 
 ---
 
@@ -442,7 +441,7 @@ Most welcome:
 - **Bug reports** — scanner output parsing edge cases
 
 ```bash
-git clone https://github.com/letzcode/k8s-eu-audit
+git clone https://github.com/LetzCodeLuxembourg/k8s-eu-audit
 cd k8s-eu-audit
 make dev-setup
 make test
